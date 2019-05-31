@@ -36,7 +36,7 @@ class CollectionEndpoints:
             return json.loads(response.read().decode('utf-8'))
 
     def put_data(self, collection_url, new_object):
-        """Fetching data from the server
+        """Put data object to the server
         :param collection_url: Collection url to PUT the data into.
         :param new_object: Object that will be added to the server.
         :return: server response.

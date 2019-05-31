@@ -557,8 +557,8 @@ class QueryFacades:
                     return None
                 else:
                     self.members = CollectionmembersQuery(self.api_doc,
-                                                        self.url,
-                                                        self.graph)
+                                                          self.url,
+                                                          self.graph)
                     if self.test:
                         data = self.members.data_from_server(
                             query.replace(" members", ""))
@@ -650,10 +650,10 @@ class QueryFacades:
                 query = query.replace("in", "").strip()
                 collection = query.split(" ", 1)[0]
                 new_object = query.replace(collection, "").strip()
-                self.members = CollectionmembersQuery(self.api_doc,
-                                                        self.url,
-                                                        self.graph)
-                response = self.members.insert_server('DroneCollection', '{"@type":"Drone", "DroneState" : "dronestate", "name" : "Drone3", "model" : "model", "MaxSpeed" : "speed", "Sensor" : "sensor"}')
+                members = CollectionmembersQuery(self.api_doc,
+                                                 self.url,
+                                                 self.graph)
+                response = members.insert_server(collection, new_object)
                 return response['message']
             else:
                 logger.info("Incorrect query: Use 'help' to know about\
