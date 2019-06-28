@@ -4,6 +4,7 @@ from redisgraph import Node, Edge, Graph
 from typing import Union, Optional
 from redis.exceptions import ResponseError
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__file__)
 
 

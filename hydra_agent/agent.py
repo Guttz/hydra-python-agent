@@ -6,6 +6,7 @@ from hydra_python_core import doc_maker
 from typing import Union, Tuple
 from requests import Session
 
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__file__)
 
 
@@ -40,13 +41,15 @@ class Agent(Session):
         :param url: Resource URL to be fetched
         :return: Dict when one object or a list when multiple targerted objects
         """
+        # Check for Cached resources in Redis
         response = self.graph_operations.get_resource(url)
         if response is not None:
             return response
 
+        # Request from server if a new resource
         response = super().get(url)
-
         if response.status_code == 200:
+            # Updating Redis Graph with new Resource
             self.graph_operations.get_processing(url, response.json())
 
         return response.json()
@@ -92,4 +95,37 @@ class Agent(Session):
         return response.json()
 
 if __name__ == "__main__":
-    pass
+    # GRAPH.QUERY apigraph "MATCH (p:collection {id:'vocab:EntryPoint/DroneCollection'}) RETURN p.members"
+    # GRAPH.QUERY apigraph "MATCH(p) WHERE(p.id='/serverapi/DroneCollection/d4a8106e-87ab-4f27-ad36-ecae3bca075c') RETURN p"
+    agent = Agent("http://localhost:8080/serverapi")
+
+    
+    print(agent.get("http://localhost:8080/serverapi/DroneCollection/d4a8106e-87ab-4f27-ad36-ecae3bca075c"))
+    print(agent.get("http://localhost:8080/serverapi/DroneCollection/020c4c65-c4f1-4f3c-8c28-29f21a01dca4"))
+
+    #input(">>>")
+
+    new_object = {"@type": "Drone", "DroneState": "Simplified state",
+                  "name": "Smart Drone", "model": "Hydra Drone",
+                  "MaxSpeed": "999", "Sensor": "Wind"}
+    print("----PUT-----")
+    response, new_resource_url = agent.put("http://localhost:8080/serverapi/DroneCollection/", new_object)
+    print("----GET RESOURCE-----")
+    logger.info(agent.get(new_resource_url))
+
+    new_object["name"] = "Updated Name"
+    del new_object["@id"]
+    
+    print("----POST-----")
+    logger.info(agent.post(new_resource_url, new_object))
+
+    print("----DELETE-----")
+    logger.info(agent.delete(new_resource_url))
+
+    print("----GET COLLECTION-----")
+    logger.info(agent.get("http://localhost:8080/serverapi/DroneCollection/"))
+
+    #logger.info(Agent.get("http://localhost:8080/serverapi/DroneCollection/607cdfee-a1d4-4476-8bb5-93cc5955a408"))
+
+
+    # logger.info(Agent.delete("http://localhost:8080/serverapi/DroneCollection/fd1e4cc5-6223-4e8a-b544-6dc9b2e60cf7"))

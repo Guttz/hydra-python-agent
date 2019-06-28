@@ -6,6 +6,7 @@ from hydra_agent.redis_proxy import RedisProxy
 from hydra_agent.graphutils import GraphUtils
 from redisgraph import Graph, Node
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__file__)
 
 
