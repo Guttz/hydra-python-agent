@@ -21,10 +21,10 @@ class Agent(Session):
         super().__init__()
         jsonld_api_doc = super().get(self.entrypoint_url + '/vocab').json()
         self.api_doc = doc_maker.create_doc(jsonld_api_doc)
+        self.initialize_graph()
         self.graph_operations = GraphOperations(entrypoint_url,
                                                 self.api_doc,
                                                 self.redis_proxy)
-        self.initialize_graph()
 
     def initialize_graph(self) -> None:
         """Initialize the Graph on Redis based on ApiDoc
@@ -36,14 +36,18 @@ class Agent(Session):
         self.graph.main(self.entrypoint_url, self.api_doc, True)
         self.redis_connection.sadd("fs:url", self.entrypoint_url)
 
-    def get(self, url: str) -> Union[dict, list]:
+    def get(self, url: str = None, resource_type: str = None,
+            filters: dict = {}) -> Union[dict, list]:
         """READ Resource from Server/cached Redis
         :param url: Resource URL to be fetched
         :return: Dict when one object or a list when multiple targerted objects
         """
-        response = self.graph_operations.get_resource(url)
-        if response is not None:
+        response = self.graph_operations.get_resource(url, resource_type,
+                                                      filters)
+        if response:
             return response
+        elif url is None:
+            return []
 
         response = super().get(url)
 
@@ -93,4 +97,16 @@ class Agent(Session):
         return response.json()
 
 if __name__ == "__main__":
+    agent = Agent("http://localhost:8080/serverapi")
+
+    # MaxSpeed 38
+    print(agent.get("http://localhost:8080/serverapi/DroneCollection/49ef01e2-f9c7-4600-a841-e7c8caf85439"))
+    print(agent.get("http://localhost:8080/serverapi/DroneCollection/f71297c3-e4fe-4040-89ef-b769b0c1161a"))
+
+    # MaxSpeed 37
+    print(agent.get("http://localhost:8080/serverapi/DroneCollection/c3927bde-dba0-47f1-8e05-c0cb38df6c69"))
+
+    print("TERCEKROR")    
+    print(agent.get(resource_type="Drone", filters={"MaxSpeed": 38, "type": "Drone", "asd": "k"}))
+    # print(agent.get("http://localhost:8080/serverapi/StateCollection/9448768a-71f9-42cd-b4cf-8ac20f336fde"))
     pass

@@ -42,6 +42,36 @@ class TestAgent(unittest.TestCase):
                                                "api/DroneCollection/1",
                                                mock_dict)
         self.assertEqual(response, mock_dict)
+
+    
+    @patch('hydra_agent.redis_core.graphutils_operations.Session.get')
+    @patch('hydra_agent.agent.Session.put')
+    def test_get_collection(self, put_session_mock, embedded_get_mock):
+        """Tests get method from the Agent
+        :param get_processing_mock: MagicMock object to patch graphoperations
+        :param get_mock: MagicMock object for patching session.get
+        """
+        mock_dict = {"@type": "Drone", "DroneState": "Simplified state",
+                     "name": "Smart Drone", "model": "Hydra Drone",
+                     "MaxSpeed": "999", "Sensor": "Wind"}
+
+        # Inserting resource in coleection
+        collection_url = "http://localhost:8080/serverapi/DroneCollection/"
+        new_object_url = collection_url + "1"
+
+        put_session_mock.return_value.status_code = 201
+        put_session_mock.return_value.json.return_value = mock_dict
+        put_session_mock.return_value.headers = {'Location': new_object_url}
+
+        # Mocking an object to be used for a property that has an embedded link
+        embedded_get_mock.return_value.status_code = 200
+        embedded_get_mock.return_value.json.return_value = mock_dict
+        response, new_object_url = self.agent.put(collection_url, mock_dict)
+
+        get_collection = self.agent.get(collection_url)
+        get_collection = eval(get_collection["members"])
+        self.assertEqual(get_collection[0]["@id"], "/serverapi/DroneCollection/1")
+
     @patch('hydra_agent.redis_core.graphutils_operations.Session.get')
     @patch('hydra_agent.agent.Session.put')
     def test_put(self, put_session_mock, embedded_get_mock):
